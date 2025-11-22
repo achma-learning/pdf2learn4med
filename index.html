@@ -7,25 +7,27 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+        h1 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f2f2f2; cursor: pointer; }
-        a { color: #007bff; text-decoration: none; }
+        th { background-color: #3498db; color: white; cursor: pointer; }
+        tr:hover { background-color: #f1f1f1; }
+        a { color: #2980b9; text-decoration: none; font-weight: 500; }
         a:hover { text-decoration: underline; }
-        .pdf-link { color: #28a745; }
+        #total-items { font-weight: bold; color: #27ae60; }
     </style>
 </head>
 <body>
     <h1>S-ECN Ressources - Tableau Complet</h1>
     <p>Total items: <span id="total-items">0</span> | <a href="changelog.html">Voir Changelog</a></p>
+
     <table id="resourcesTable" class="display">
         <thead>
             <tr>
                 <th>Module</th>
                 <th>Titre</th>
                 <th>Node URL</th>
-                <th>PDF URL</th>
                 <th>Date</th>
             </tr>
         </thead>
@@ -43,13 +45,19 @@
                 columns: [
                     { data: 'module' },
                     { data: 'title' },
-                    { data: 'nodeUrl', render: function(url) { return url ? `<a href="${url}" target="_blank">${url}</a>` : ''; } },
-                    { data: 'pdfUrl', render: function(url) { return url ? `<a href="${url}" class="pdf-link" target="_blank">Télécharger PDF</a>` : 'N/A'; } },
+                    { 
+                        data: 'nodeUrl', 
+                        render: function(url) { 
+                            return url ? `<a href="${url}" target="_blank">Voir la fiche</a>` : '—'; 
+                        } 
+                    },
                     { data: 'date', type: 'date' }
                 ],
                 pageLength: 25,
-                order: [[4, 'desc']],  // Sort by date descending
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json' }  // French localization
+                order: [[3, 'desc']],  // Sort by date descending (newest first)
+                language: { 
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json' 
+                }
             });
         });
     </script>
