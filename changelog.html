@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>S-ECN Viewer - Changelog</title>
+    <title>S-ECN Viewer - Changelog (Protégé)</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .date-group { margin-bottom: 30px; border-left: 4px solid #007bff; padding-left: 20px; }
@@ -11,16 +11,73 @@
         a { color: #28a745; text-decoration: none; }
         a:hover { text-decoration: underline; }
         .pdf-link { color: #28a745; font-weight: bold; }
+        #pin-prompt { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 9999; display: flex; 
+            align-items: center; justify-content: center; 
+        }
+        .pin-box { 
+            background: white; padding: 40px; border-radius: 10px; 
+            text-align: center; max-width: 300px; 
+        }
+        .pin-box input { width: 100%; padding: 10px; margin: 10px 0; font-size: 18px; text-align: center; }
+        .pin-box button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <h1>S-ECN Changelog - Mises à Jour par Date</h1>
-    <p><a href="index.html">Retour au Tableau</a></p>
-    <div id="changelog"></div>
+    <!-- PIN Prompt Overlay -->
+    <div id="pin-prompt">
+        <div class="pin-box">
+            <h3>Accès Protégé - Entrez le PIN</h3>
+            <input type="password" id="pin-input" placeholder="Entrez 8001200" maxlength="7">
+            <br>
+            <button onclick="checkPin()">Valider</button>
+            <p id="error-msg" style="color: red; display: none;">PIN incorrect !</p>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden until PIN correct) -->
+    <div id="main-content" class="hidden">
+        <h1>S-ECN Changelog - Mises à Jour par Date</h1>
+        <p><a href="index.html">Retour au Tableau</a></p>
+        <div id="changelog"></div>
+    </div>
 
     <script src="config.js"></script>
     <script>
-        (async function() {
+        const CORRECT_PIN = '8001200';
+
+        function checkPin() {
+            const input = document.getElementById('pin-input').value;
+            const errorMsg = document.getElementById('error-msg');
+            if (input === CORRECT_PIN) {
+                // Store in sessionStorage (valid for this browser session)
+                sessionStorage.setItem('ecn-pin', 'valid');
+                document.getElementById('pin-prompt').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                loadChangelog();  // Load the content
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('pin-input').value = '';  // Clear input
+                setTimeout(() => { errorMsg.style.display = 'none'; }, 3000);
+            }
+        }
+
+        // Check if PIN already entered this session
+        if (sessionStorage.getItem('ecn-pin') === 'valid') {
+            document.getElementById('pin-prompt').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            loadChangelog();
+        }
+
+        // Allow Enter key to submit PIN
+        document.getElementById('pin-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkPin();
+        });
+
+        // Main changelog loader (original code)
+        async function loadChangelog() {
             const data = await loadData();
             const grouped = data.reduce((acc, item) => {
                 const date = item.date === 'N/A' ? 'Sans date' : item.date;
@@ -44,7 +101,7 @@
                 html += '</div>';
             });
             document.getElementById('changelog').innerHTML = html;
-        })();
+        }
     </script>
 </body>
 </html>
