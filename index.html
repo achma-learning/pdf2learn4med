@@ -2,71 +2,44 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>S-ECN Viewer - Toutes les fiches</title>
+    <title>S-ECN Viewer - Filtres & Tri</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <style>
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            margin: 30px; 
-            background: #f8f9fa; 
-            color: #2c3e50; 
-        }
-        h1 { 
-            color: #2c3e50; 
-            text-align: center; 
-            margin-bottom: 10px; 
-        }
-        .info { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            font-size: 1.1em; 
-        }
-        #total-items { 
-            font-weight: bold; 
-            color: #27ae60; 
-            font-size: 1.3em; 
-        }
-        table { 
-            width: 100%; 
-            background: white; 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1); 
-            border-radius: 10px; 
-            overflow: hidden; 
-        }
-        th { 
-            background-color: #3498db !important; 
-            color: white !important; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            font-size: 0.9em; 
-            letter-spacing: 0.5px; 
-        }
-        th, td { 
-            padding: 15px 12px !important; 
-            text-align: left; 
-        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; background: #f8f9fa; color: #2c3e50; }
+        h1 { text-align: center; color: #2c3e50; }
+        .controls { text-align: center; margin: 20px 0; padding: 15px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        select, button { padding: 10px 15px; margin: 5px; border-radius: 8px; font-size: 16px; }
+        button { background: #3498db; color: white; border: none; cursor: pointer; }
+        button:hover { background: #2980b9; }
+        .r2c-btn { background: #e74c3c; }
+        .nonr2c-btn { background: #27ae60; }
+        #total-items { font-weight: bold; color: #27ae60; font-size: 1.3em; }
+        table { width: 100%; background: white; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; }
+        th { background-color: #3498db !important; color: white !important; }
         tr:nth-child(even) { background-color: #f8f9fa; }
         tr:hover { background-color: #e3f2fd !important; }
-        a { 
-            color: #2980b9; 
-            font-weight: 600; 
-            text-decoration: none; 
-        }
-        a:hover { text-decoration: underline; }
-        .dataTables_wrapper .dataTables_filter input {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
+        a { color: #2980b9; font-weight: 600; }
+        .dataTables_wrapper .dataTables_filter input { padding: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
     <h1>S-ECN — Toutes les Fiches ECN/iECN/R2C</h1>
-    <div class="info">
-        Total fiches : <span id="total-items">0</span> | 
-        <a href="changelog.html">Voir le Changelog par date</a>
+    <div class="controls">
+        <div>
+            Total fiches : <span id="total-items">0</span> | 
+            <a href="changelog.html">Voir le Changelog</a>
+        </div>
+        <br>
+        <select id="module-filter" multiple size="8" style="width: 400px;">
+            <!-- Filled by JS -->
+        </select>
+        <br><br>
+        <button id="filter-r2c" class="r2c-btn">R2C seulement</button>
+        <button id="filter-nonr2c" class="nonr2c-btn">Non-R2C seulement</button>
+        <button id="clear-filter">Tout afficher</button>
     </div>
 
     <table id="resourcesTable" class="display">
@@ -75,7 +48,7 @@
                 <th>Module</th>
                 <th>Titre</th>
                 <th>Node URL</th>
-                <th>Date de mise à jour</th>
+                <th>Date</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -83,33 +56,66 @@
 
     <script src="config.js"></script>
     <script>
-        $(document).ready(async function() {
-            const data = await loadData();
-            $('#total-items').text(data.length);
+        let table;
+        let allData = [];
 
-            $('#resourcesTable').DataTable({
-                data: data,
+        $(document).ready(async function() {
+            allData = await loadData();
+            $('#total-items').text(allData.length);
+
+            // Extract unique modules
+            const modules = [...new Set(allData.map(item => item.module))].sort();
+            const select = $('#module-filter');
+            modules.forEach(mod => {
+                select.append(`<option value="${mod}">${mod}</option>`);
+            });
+
+            // Initialize DataTable
+            table = $('#resourcesTable').DataTable({
+                data: allData,
                 columns: [
                     { data: 'module' },
                     { data: 'title' },
                     { 
                         data: 'nodeUrl', 
-                        render: function(url) { 
-                            return url ? `<a href="${url}" target="_blank">Voir la fiche</a>` : '—'; 
-                        } 
+                        render: url => url ? `<a href="${url}" target="_blank">Voir la fiche</a>` : '—' 
                     },
                     { data: 'date', type: 'date' }
                 ],
-                pageLength: -1,           // -1 = Show ALL entries
-                lengthMenu: [ [50, 100, -1], [50, 100, "Tous"] ],
-                order: [[0, 'asc']],      // Default sort: by Module name (A → Z)
-                language: { 
-                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json',
-                    lengthMenu: "Afficher _MENU_ fiches",
-                    info: "Total : _TOTAL_ fiches",
-                    search: "Rechercher dans toutes les colonnes :"
-                },
-                dom: 'lfrtip'  // l = length menu, f = filter, r = processing, t = table, i = info, p = pagination
+                pageLength: -1,
+                lengthMenu: [[50, 100, -1], [50, 100, "Tous"]],
+                order: [[0, 'asc']], // Sort by module by default
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json' },
+                dom: 'lfrtip'
+            });
+
+            // Module multi-select filter
+            $('#module-filter').on('change', function() {
+                const selected = $(this).val();
+                if (!selected || selected.length === 0) {
+                    table.column(0).search('').draw();
+                } else {
+                    const regex = selected.map(m => '^' + $.fn.dataTable.util.escapeRegex(m) + '$').join('|');
+                    table.column(0).search(regex, true, false).draw();
+                }
+            });
+
+            // R2C Only
+            $('#filter-r2c').on('click', function() {
+                table.column(0).search('R2C$').draw();
+                select.val(select.find('option').filter((_, el) => el.text.includes('R2C')).map((_, el) => el.value));
+            });
+
+            // Non-R2C Only
+            $('#filter-nonr2c').on('click', function() {
+                table.column(0).search('^(?!.*R2C$).*$', true).draw();
+                select.val(select.find('option').filter((_, el) => !el.text.includes('R2C')).map((_, el) => el.value));
+            });
+
+            // Clear filter
+            $('#clear-filter').on('click', function() {
+                table.column(0).search('').draw();
+                $('#module-filter').val([]);
             });
         });
     </script>
