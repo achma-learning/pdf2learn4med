@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>S-ECN Viewer - Changelog</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .date-group { margin-bottom: 30px; border-left: 4px solid #007bff; padding-left: 20px; }
+        .date-header { font-size: 1.2em; color: #007bff; margin-bottom: 10px; }
+        .item { margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+        a { color: #28a745; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .pdf-link { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>S-ECN Changelog - Mises à Jour par Date</h1>
+    <p><a href="index.html">Retour au Tableau</a></p>
+    <div id="changelog"></div>
+
+    <script src="config.js"></script>
+    <script>
+        (async function() {
+            const data = await loadData();
+            const grouped = data.reduce((acc, item) => {
+                const date = item.date === 'N/A' ? 'Sans date' : item.date;
+                if (!acc[date]) acc[date] = [];
+                acc[date].push(item);
+                return acc;
+            }, {});
+            const sortedDates = Object.keys(grouped).sort().reverse();  // Descending
+
+            let html = '';
+            sortedDates.forEach(date => {
+                html += `<div class="date-group">
+                    <div class="date-header">${date} (${grouped[date].length} items)</div>`;
+                grouped[date].forEach(item => {
+                    html += `<div class="item">
+                        <strong>${item.module}:</strong> ${item.title}<br>
+                        <a href="${item.nodeUrl}" target="_blank">Node</a> | 
+                        <a href="${item.pdfUrl}" class="pdf-link" target="_blank">PDF</a>
+                    </div>`;
+                });
+                html += '</div>';
+            });
+            document.getElementById('changelog').innerHTML = html;
+        })();
+    </script>
+</body>
+</html>
