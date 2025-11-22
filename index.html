@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>S-ECN Viewer - Table des Ressources</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; cursor: pointer; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .pdf-link { color: #28a745; }
+    </style>
+</head>
+<body>
+    <h1>S-ECN Ressources - Tableau Complet</h1>
+    <p>Total items: <span id="total-items">0</span> | <a href="changelog.html">Voir Changelog</a></p>
+    <table id="resourcesTable" class="display">
+        <thead>
+            <tr>
+                <th>Module</th>
+                <th>Titre</th>
+                <th>Node URL</th>
+                <th>PDF URL</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src="config.js"></script>
+    <script>
+        $(document).ready(async function() {
+            const data = await loadData();
+            $('#total-items').text(data.length);
+
+            $('#resourcesTable').DataTable({
+                data: data,
+                columns: [
+                    { data: 'module' },
+                    { data: 'title' },
+                    { data: 'nodeUrl', render: function(url) { return url ? `<a href="${url}" target="_blank">${url}</a>` : ''; } },
+                    { data: 'pdfUrl', render: function(url) { return url ? `<a href="${url}" class="pdf-link" target="_blank">Télécharger PDF</a>` : 'N/A'; } },
+                    { data: 'date', type: 'date' }
+                ],
+                pageLength: 25,
+                order: [[4, 'desc']],  // Sort by date descending
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json' }  // French localization
+            });
+        });
+    </script>
+</body>
+</html>
